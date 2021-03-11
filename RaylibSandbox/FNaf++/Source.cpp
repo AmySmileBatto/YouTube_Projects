@@ -5,6 +5,10 @@
 * 
 *	This project uses Raylib (https://www.raylib.com/)
 *	Copyright (c) 2013-2016 Ramon Santamaria (@raysan5)
+* 
+*	To understand what the functions/types not defined inside this doc
+*	are/do, you can search for them on the Raylib Cheatsheet
+*	https://www.raylib.com/cheatsheet/cheatsheet.html
 *	
 *	C/C++
 *		General
@@ -41,6 +45,11 @@
 * 
 **************************************************************************/
 
+// Putting an @ anywhere in a comment will cause anything after the @ to only show up when looking at the comment itself, so that it doesn't show up in Quick-Info when hovering a variable/type/function name.
+// I do this so that explanations of why I wrote my code in certain ways doesn't appear when trying to remember what a variable/type/function is supposed to be for.
+
+// Enumerator for storing what camera a button is associated with
+// @TODO: This enum hasn't been used anywhere yet...
 enum class Cam {
 	Cam_1A,		// Show stage
 	Cam_1B,		// Dining hall
@@ -55,142 +64,190 @@ enum class Cam {
 	Cam_7,		// Bathrooms
 };
 
-namespace Renders {
+// 
+struct Sprite {
+	Sprite(unsigned int _length, const char** _fileNameArray) : length(_length), renders(nullptr) {
+		renders = new Texture2D[_length];
+		for (; _length; --_length) { // Reduce _length (which is a copy) till it is 0. Then exit.
+			renders[_length - 1] = LoadTexture(_fileNameArray[_length - 1]);
+		}
+	};
+	~Sprite() {
+		for (unsigned int i = 0; i < length; ++i) {
+			UnloadTexture(renders[i]);
+		}
+		delete[] renders;
+	}
 
-	Texture2D g_FreddyRenders[]{
-	#if _DEBUG
-		LoadTexture("Freddy_Debug"),	// Show stage
-		g_FreddyRenders[0],				// Dining hall
-		g_FreddyRenders[0],				// Bathrooms
-		g_FreddyRenders[0],				// Kitchen
-		g_FreddyRenders[0],				// East hall
-		g_FreddyRenders[0],				// East corner
-		g_FreddyRenders[0],				// East door
-	#else // TODO
-		LoadTexture(""),				// Show stage
-		LoadTexture(""),				// Dining hall
-		LoadTexture(""),				// Bathrooms
-		LoadTexture(""),				// Kitchen
-		LoadTexture(""),				// East hall
-		LoadTexture(""),				// East corner
-		LoadTexture(""),				// East door
-	#endif
-	};
-	Texture2D g_FoxyRenders[]{
-	#if _DEBUG
-		LoadTexture("Foxy_Debug"),		// Pirate Cove (0)
-		g_FoxyRenders[0],				// Pirate Cove (1)
-		g_FoxyRenders[0],				// Pirate Cove (2)
-		g_FoxyRenders[0],				// West hall (animated) TODO
-		g_FoxyRenders[0],				// West door (animated) TODO
-	#else // TODO
-		LoadTexture(""),				// Pirate Cove (0)
-		LoadTexture(""),				// Pirate Cove (1)
-		LoadTexture(""),				// Pirate Cove (2)
-		LoadTexture(""),				// West hall (animated) TODO
-		LoadTexture(""),				// West door (animated) TODO
-	#endif
-	};
-	Texture2D g_BonnieRenders[]{
-	#if _DEBUG
-		LoadTexture("Bonnie_Debug"),	// Show stage
-		g_BonnieRenders[0],				// Dining hall
-		g_BonnieRenders[0],				// Backstage
-		g_BonnieRenders[0],				// West hall
-		g_BonnieRenders[0],				// Storage closet
-		g_BonnieRenders[0],				// West corner
-		g_BonnieRenders[0],				// West door
-	#else // TODO
-		LoadTexture(""),				// Show stage
-		LoadTexture(""),				// Dining hall
-		LoadTexture(""),				// Backstage
-		LoadTexture(""),				// West hall
-		LoadTexture(""),				// Storage closet
-		LoadTexture(""),				// West corner
-		LoadTexture(""),				// West door
-	#endif
-	};
-	Texture2D g_ChicaRenders[]{
-	#if _DEBUG
-		LoadTexture("Chica_Debug"),		// Show stage
-		g_ChicaRenders[0],				// Dining hall
-		g_ChicaRenders[0],				// Bathrooms
-		g_ChicaRenders[0],				// Kitchen
-		g_ChicaRenders[0],				// East hall
-		g_ChicaRenders[0],				// East corner
-		g_ChicaRenders[0],				// East door
-	#else // TODO
-		LoadTexture(""),				// Show stage
-		LoadTexture(""),				// Dining hall
-		LoadTexture(""),				// Bathrooms
-		LoadTexture(""),				// Kitchen
-		LoadTexture(""),				// East hall
-		LoadTexture(""),				// East corner
-		LoadTexture(""),				// East door
-	#endif
-	};
-}
+	const unsigned int length; // How many frames are in the render
+	Texture2D* renders; // Pointer to array of renders
+};
 
-struct Animatronic {
+// Type for storing information about an animatronic
+struct Animatronic
+{
 	// Construct the animatronic with its base charge time
+	// There is no default constructor. Animatronic recharge is required as a non-default due to it being a const.
 	Animatronic(int _recharge) : position(0), recharge(_recharge), level(0) {};
-	int position; // Where the animatronic is in the building (refers to the index in the animatronic's Renders array)
-	int recharge; // How many frames between movement opprotunities
+	// Where the animatronic is in the building
+	// refers to the index in the animatronic's Renders array
+	int position;
+	// How many frames between movement opprotunities
+	// Do not increment/decrement this, it should stay the same at all times once initialized.
+	const int recharge;
+	// The AI level of the animatronic
+	// Movement oppronity RNG will be compared against this number to determine success of the "dice roll" (expected 0..20)
 	int level;
 
+	// Whether the animatronic has the opprotunity to move this frame. They will still need to succeed the RNG to actually move.
 	bool IsReady(int f) {
-		return !(f % recharge); // If the frame evenly modulos by the recharge time
-	}
-	void Jumpscare() {
-		// TODO: Render animatronic flailing about
+		return !(f % recharge); // If the frame evenly modulos by the recharge time, the animatronic has the opprotunity to move.
 	}
 };
-enum Character {
-	FREDDY,
-	FOXY,
-	BONNIE,
-	CHICA,
+// Differenciates characters for use in the Jumpscare function
+enum class Character {
+	FREDDY, // Pull animation from Freddy's pool
+	FOXYYY, // Pull animation from Foxy's pool
+	BONNIE, // Pull animation from Bonnie's pool
+	CHICAA, // Pull animation from Chica's pool
 };
 void Jumpscare(Character animation) {
-	switch (animation) // TODO
-	{
-	case FREDDY:
+	switch (animation) {
+	case Character::FREDDY:
+		// TODO: Show jumpscare animation
 		break;
-	case FOXY:
+	case Character::FOXYYY:
+		// TODO: Show jumpscare animation
 		break;
-	case BONNIE:
+	case Character::BONNIE:
+		// TODO: Show jumpscare animation
 		break;
-	case CHICA:
+	case Character::CHICAA:
+		// TODO: Show jumpscare animation
 		break;
 	default:
+		// TODO: Default jumpscare?..
 		break;
 	}
 }
 
 int main() {
-	int windowWidth = 1280;
-	int windowHeight = 720;
-	InitWindow(windowWidth, windowHeight, "FNaF++");
-	SetTargetFPS(60);
+	int windowWidth = 1920; // FHD screen resolution for width
+	int windowHeight = 1080; // FHD screen resolution for height
+	InitWindow(windowWidth, windowHeight, "FNaF++"); // Create the window the game will run in
+	SetTargetFPS(60); // We want the game to run at 60 fps; no more, less is bad but what can ya do.
+	ToggleFullscreen(); // Because programs start in windowed mode, toggling fullscreen will make the window fullscreen.
 	// Load memory & declare frame-global variables (variables that persist across frames)
-	int frame = 0;
-	bool b_inCams = false;
-	bool b_foxyIsStunned = false; // Foxy must wait for both b_inCams & b_foxyIsStunned to both be false before he can move.
-	Animatronic
-		freddy(673),
-		foxyyy(437),
-		bonnie(284),
-		chicaa(390);
-	int freddysStoredCrits = 0; // Freddy stores movement opprotunities for later use
-	bool b_doorL, b_doorR = b_doorL = false; // TODO: Implement these
 
-	while (!WindowShouldClose()) {
-		// Update game variables
-		if (IsKeyPressed(KEY_SPACE)) {
-			b_inCams = !b_inCams;
-			if (b_inCams) b_foxyIsStunned = true;
+#pragma region Renders	
+
+#if _DEBUG // Initialize the debug textures so we only have to load each once
+	Texture2D debug_Freddy = LoadTexture("Freddy_Debug");
+	Texture2D debug_Foxyyy = LoadTexture("Foxy_Debug"  );
+	Texture2D debug_Bonnie = LoadTexture("Bonnie_Debug");
+	Texture2D debug_Chicaa = LoadTexture("Chica_Debug" );
+#endif
+
+	// Array of renders for displaying Freddy
+	Texture2D freddyRenders[8]{
+	#if _DEBUG
+		debug_Freddy,	// Show stage
+		debug_Freddy,	// Dining hall
+		debug_Freddy,	// Bathrooms
+		debug_Freddy,	// Kitchen
+		debug_Freddy,	// East hall
+		debug_Freddy,	// East corner
+		debug_Freddy,	// East door
+
+		debug_Freddy,	// West door (power out)
+	#else // TODO
+		LoadTexture("Freddy_ShowStage"  ),	// Show stage
+		LoadTexture("Freddy_DiningHall" ),	// Dining hall
+		LoadTexture("Freddy_Bathrooms"  ),	// Bathrooms
+		LoadTexture("Freddy_Kitchen"    ),	// Kitchen
+		LoadTexture("Freddy_Hall_East"  ),	// East hall
+		LoadTexture("Freddy_Corner_East"),	// East corner
+		LoadTexture("Freddy_Door_East"  ),	// East door
+
+		LoadTexture("Freddy_Door_West"  ),	// West door (power out)
+	#endif
+	};
+	// Array of renders for displaying Foxy
+	Texture2D foxyyyRenders[3]{
+	#if _DEBUG
+		debug_Foxyyy,	// Pirate Cove (0)
+		debug_Foxyyy,	// Pirate Cove (1)
+		debug_Foxyyy,	// Pirate Cove (2)
+		// West hall (animated) TODO
+		// West door (animated) TODO
+	#else // TODO
+		LoadTexture("Foxy_PirateCove_0"),	// Pirate Cove (0)
+		LoadTexture("Foxy_PirateCove_1"),	// Pirate Cove (1)
+		LoadTexture("Foxy_PirateCove_2"),	// Pirate Cove (2)
+		// West hall (animated) TODO
+		// West door (animated) TODO
+	#endif
+	};
+	// Array of renders for displaying Bonnie
+	Texture2D bonnieRenders[7]{
+	#if _DEBUG
+		debug_Bonnie,	// Show stage
+		debug_Bonnie,	// Dining hall
+		debug_Bonnie,	// Backstage
+		debug_Bonnie,	// West hall
+		debug_Bonnie,	// Storage closet
+		debug_Bonnie,	// West corner
+		debug_Bonnie,	// West door
+	#else // TODO
+		LoadTexture("Bonnie_ShowStage"    ),	// Show stage
+		LoadTexture("Bonnie_DiningHall"   ),	// Dining hall
+		LoadTexture("Bonnie_Backstage"    ),	// Backstage
+		LoadTexture("Bonnie_Hall_West"    ),	// West hall
+		LoadTexture("Bonnie_StorageCloset"),	// Storage closet
+		LoadTexture("Bonnie_Corner_West"  ),	// West corner
+		LoadTexture("Bonnie_Door_West"    ),	// West door
+	#endif
+	};
+	// Array of renders for displaying Chica
+	Texture2D chicaaRenders[7]{
+	#if _DEBUG
+		debug_Chicaa,	// Show stage
+		debug_Chicaa,	// Dining hall
+		debug_Chicaa,	// Bathrooms
+		debug_Chicaa,	// Kitchen
+		debug_Chicaa,	// East hall
+		debug_Chicaa,	// East corner
+		debug_Chicaa,	// East door
+	#else // TODO
+		LoadTexture("Chica_ShowStage"  ),	// Show stage
+		LoadTexture("Chica_DiningHall" ),	// Dining hall
+		LoadTexture("Chica_Bathroom"   ),	// Bathrooms
+		LoadTexture("Chica_Kitchen"    ),	// Kitchen
+		LoadTexture("Chica_Hall_East"  ),	// East hall
+		LoadTexture("Chica_Corner_East"),	// East corner
+		LoadTexture("Chica_Door_East"  ),	// East door
+	#endif
+	};
+#pragma endregion
+
+	int frame = 0; // What frame we are on @ The frame number can be a clean integer, time would be a float and may not line up with the times we are performing calculations.
+	bool b_inCams = false; // Whether the player is looking at the cameras
+	bool b_foxyIsStunned = false; // Foxy must wait for both b_inCams & b_foxyIsStunned to both be false before he can move.
+	Animatronic // @ The following comma-separated identifiers (variable names) will all be of the type Animatronic until a semicolon is reached.
+		freddy(673), // Freddy @ Following the variable name with parenthesis containing parameters that are valid with a constructor for the type calls the constructor on the variable in the same line it is declared.
+		foxyyy(437), // Foxy   @ Note that Animatronic does not have a default constructor. If we declared these variables without calling the specialized constructor, it would give an error. This is on purpose.
+		bonnie(284), // Bonnie
+		chicaa(390); // Chica
+	int freddysStoredCrits = 0; // Freddy stores movement opprotunities for later use
+	bool b_doorL, b_doorR = b_doorL = false; // Simultaneously declare both b_doorL and b_doorR, initializing them both to false in the same line. (b_doorL = false; b_doorR = b_doorL (which is now false);)
+
+	while (!WindowShouldClose()) { // This is the game loop; what happens every frame the program is running
+		#pragma region Update game variables
+
+		if (IsKeyPressed(KEY_SPACE)) { // If the space key was pressed this frame,
+			b_inCams = !b_inCams; // Toggle the "are we watching the cameras" bool
+			if (b_inCams) b_foxyIsStunned = true; // Then, if we are *now* in the cameras (meaning we've entered the cam this frame), stun Foxy.
 		}
-		frame++;
 		int frameRand = rand(); // Note that this value will be the same across all uses this frame. To help this, post-increment it each time it is used.
 		// TODO: What happens when an animatronic's position is greater than the last valid index in the animatronic's renders array?
 		if (freddy.IsReady(frame)) {
@@ -207,24 +264,29 @@ int main() {
 		}
 		if (bonnie.IsReady(frame)) {
 			bonnie.position += (frameRand++ & 1);
-			if (bonnie.position >= 7) { // Invalid index
-				bonnie.Jumpscare();
+
+			if (bonnie.position >= 7) { // Invalid index; no render exists for this so we will instead initiate the jumpscare sequence.
+				Jumpscare(Character::BONNIE);
 			}
 		}
 		if (chicaa.IsReady(frame)) {
 			chicaa.position += (frameRand++ & 1);
-			if (chicaa.position >= 7) { // Invalid index
 
+			if (chicaa.position >= 7) { // Invalid index; no render exists for this so we will instead initiate the jumpscare sequence.
+				Jumpscare(Character::CHICAA);
 			}
 		}
 
-		// Draw the frame
-		BeginDrawing(); {
+		#pragma endregion
+
+		#pragma region Draw the frame
+
+		BeginDrawing(); { // You don't have to put the drawing code in its own scope, it's just a personal preference so that it gets automatically indented and doesn't leak any rendering locals.
 
 			// Rendering
-			ClearBackground(BLACK);
+			ClearBackground(BLACK); // Clears the frame to be totally black at the start of rendering, giving us a clean slate to work off of.
 
-#if _DEBUG
+		#if _DEBUG // I don't want the debug data being displayed in the release build. The "#if _DEBUG { ... } #endif" will leave this section of code out of any version where _DEBUG is 0.
 			// Print the debug data
 			// Split into multiple sections because the default Raylib font isn't monospace
 			DrawText(TextFormat("Freddy:\nFoxy:\nBonnie:\nChica:\n\nCurrent state: %s",(b_inCams ? "Camera" : "Office")), 0, 0, 8, WHITE);
@@ -243,16 +305,22 @@ int main() {
 								foxyyy.recharge, frame / foxyyy.recharge, (b_foxyIsStunned ? "stunned" : ""),
 								bonnie.recharge, frame / bonnie.recharge,
 								chicaa.recharge, frame / chicaa.recharge), 86, 0, 8, WHITE);
-#endif
+		#endif
 			// TODO: render the animatronics
 
 		} EndDrawing();
+
+		#pragma endregion
+
+		frame++; // Increment the frame counter at the end of the frame.
 	}
 	// Unload & free memory
-	for (const Texture2D& render : Renders::g_FreddyRenders) UnloadTexture(render);
-	for (const Texture2D& render : Renders::g_FoxyRenders)   UnloadTexture(render);
-	for (const Texture2D& render : Renders::g_BonnieRenders) UnloadTexture(render);
-	for (const Texture2D& render : Renders::g_ChicaRenders)  UnloadTexture(render);
+
+	// the variable "render" is a constant Texture2D reference so that it doesn't perform a potentially expensive copy operation for each render.
+	for (const Texture2D& render : freddyRenders) { UnloadTexture(render); } // Unload each texture in the freddyRenders array
+	for (const Texture2D& render : foxyyyRenders) { UnloadTexture(render); } // Unload each texture in the foxyyyRenders array
+	for (const Texture2D& render : bonnieRenders) { UnloadTexture(render); } // Unload each texture in the bonnieRenders array
+	for (const Texture2D& render : chicaaRenders) { UnloadTexture(render); } // Unload each texture in the chicaaRenders array
 
 	CloseWindow();
 	return 0;
