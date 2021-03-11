@@ -160,9 +160,9 @@ void Jumpscare(Character animation) {
 	}
 }
 
-int main1() {
-	int windowWidth = 1920; // FHD screen resolution for width
-	int windowHeight = 1080; // FHD screen resolution for height
+int main() {
+	const int windowWidth = 1920; // FHD screen resolution for width
+	const int windowHeight = 1080; // FHD screen resolution for height
 	InitWindow(windowWidth, windowHeight, "FNaF++"); // Create the window the game will run in
 	SetTargetFPS(60); // We want the game to run at 60 fps; no more, less is bad but what can ya do.
 	ToggleFullscreen(); // Because programs start in windowed mode, toggling fullscreen will make the window fullscreen.
@@ -233,13 +233,13 @@ int main1() {
 		debug_Bonnie,	// West corner
 		debug_Bonnie,	// West door
 	#else // TODO
-		LoadTexture("Bonnie_ShowStage"    ),	// Show stage
-		LoadTexture("Bonnie_DiningHall"   ),	// Dining hall
-		LoadTexture("Bonnie_Backstage"    ),	// Backstage
-		LoadTexture("Bonnie_Hall_West"    ),	// West hall
-		LoadTexture("Bonnie_StorageCloset"),	// Storage closet
-		LoadTexture("Bonnie_Corner_West"  ),	// West corner
-		LoadTexture("Bonnie_Door_West"    ),	// West door
+		LoadTexture("Bonnie_ShowStage.png"    ),	// Show stage
+		LoadTexture("Bonnie_DiningHall.png"   ),	// Dining hall
+		LoadTexture("Bonnie_Backstage.png"    ),	// Backstage
+		LoadTexture("Bonnie_Hall_West.png"    ),	// West hall
+		LoadTexture("Bonnie_StorageCloset.png"),	// Storage closet
+		LoadTexture("Bonnie_Corner_West.png"  ),	// West corner
+		LoadTexture("Bonnie_Door_West.png"    ),	// West door
 	#endif
 	};
 	Sprite bonnieJumpscare({ "" }); // TODO
@@ -255,17 +255,19 @@ int main1() {
 		debug_Chicaa,	// East corner
 		debug_Chicaa,	// East door
 	#else // TODO
-		LoadTexture("Chica_ShowStage"  ),	// Show stage
-		LoadTexture("Chica_DiningHall" ),	// Dining hall
-		LoadTexture("Chica_Bathroom"   ),	// Bathrooms
-		LoadTexture("Chica_Kitchen"    ),	// Kitchen
-		LoadTexture("Chica_Hall_East"  ),	// East hall
-		LoadTexture("Chica_Corner_East"),	// East corner
-		LoadTexture("Chica_Door_East"  ),	// East door
+		LoadTexture("Chica_ShowStage.png"  ),	// Show stage
+		LoadTexture("Chica_DiningHall.png" ),	// Dining hall
+		LoadTexture("Chica_Bathroom.png"   ),	// Bathrooms
+		LoadTexture("Chica_Kitchen.png"    ),	// Kitchen
+		LoadTexture("Chica_Hall_East.png"  ),	// East hall
+		LoadTexture("Chica_Corner_East.png"),	// East corner
+		LoadTexture("Chica_Door_East.png"  ),	// East door
 	#endif
 	};
 	Sprite chicaaJumpscare({ "" }); // TODO
 	Sprite chicaaHeadTwitch({ "" });
+
+	Texture2D staticRender = LoadTexture("Static.png");
 
 #pragma endregion
 
@@ -278,38 +280,57 @@ int main1() {
 		bonnie(284), // Bonnie
 		chicaa(390); // Chica
 	int freddysStoredCrits = 0; // Freddy stores movement opprotunities for later use
-	bool b_doorL, b_doorR = b_doorL = false; // Simultaneously declare both b_doorL and b_doorR, initializing them both to false in the same line. (b_doorL = false; b_doorR = b_doorL (which is now false);)
+	bool b_doorL = false; bool b_doorR = false;
+	bool b_lampL = false; bool b_lampR = false;
+	float battery = 100.0f; // How much power is remaining
+
+	const Rectangle screenRectangle = { 0.0f, 0.0f, (float)windowWidth, (float)windowHeight }; // Storing these variables so they don't have to be reconstructed every frame
+	const float windowHalfWidth = ((float)windowWidth * 0.5f);
+	const float windowHalfHeight = ((float)windowHeight * 0.5f);
 
 	while (!WindowShouldClose()) { // This is the game loop; what happens every frame the program is running
 		#pragma region Update game variables
+
+		if (IsKeyPressed(KEY_A)) { // Toggle whether the door is closed
+			b_doorL = !b_doorL;
+		}
+		if (IsKeyPressed(KEY_D)) {
+			b_doorR = !b_doorR;
+		}
+		b_lampL = IsKeyDown(KEY_Q); // Lights are only on while the button is held
+		b_lampR = IsKeyDown(KEY_E);
+
+		if (b_doorL) battery -= 0.02f;
+		if (b_doorR) battery -= 0.02f;
+		if (b_lampL) battery -= 0.01f;
+		if (b_lampR) battery -= 0.01f;
 
 		if (IsKeyPressed(KEY_SPACE)) { // If the space key was pressed this frame,
 			b_inCams = !b_inCams; // Toggle the "are we watching the cameras" bool
 			if (b_inCams) b_foxyIsStunned = true; // Then, if we are *now* in the cameras (meaning we've entered the cam this frame), stun Foxy.
 		}
-		int frameRand = rand(); // Note that this value will be the same across all uses this frame. To help this, post-increment it each time it is used.
-		// TODO: What happens when an animatronic's position is greater than the last valid index in the animatronic's renders array?
+
 		if (freddy.IsReady(frame)) {
-			++freddysStoredCrits;
+			freddysStoredCrits++;
 			if (!b_inCams) {
-				// (frameRand % freddysStoredCrits) is guaranteed to never exceed freddysStoredCrits
-				freddy.position += (freddysStoredCrits - (frameRand++ % freddysStoredCrits));
-				freddysStoredCrits = 0;
+				while (freddysStoredCrits--) {
+					freddy.position += ((rand() % 20) > freddy.level);
+				}
 			}
 		}
 		if (foxyyy.IsReady(frame) && !b_inCams) {
-			if (!b_foxyIsStunned) foxyyy.position += (frameRand++ & 1);
+			if (!b_foxyIsStunned) foxyyy.position += ((rand() % 20) > foxyyy.level);
 			else b_foxyIsStunned = false;
 		}
 		if (bonnie.IsReady(frame)) {
-			bonnie.position += (frameRand++ & 1);
+			bonnie.position += ((rand() % 20) > bonnie.level);
 
 			if (bonnie.position >= 7) { // Invalid index; no render exists for this so we will instead initiate the jumpscare sequence.
 				Jumpscare(Character::BONNIE);
 			}
 		}
 		if (chicaa.IsReady(frame)) {
-			chicaa.position += (frameRand++ & 1);
+			chicaa.position += ((rand() % 20) > chicaa.level);
 
 			if (chicaa.position >= 7) { // Invalid index; no render exists for this so we will instead initiate the jumpscare sequence.
 				Jumpscare(Character::CHICAA);
@@ -325,25 +346,46 @@ int main1() {
 			// Rendering
 			ClearBackground(BLACK); // Clears the frame to be totally black at the start of rendering, giving us a clean slate to work off of.
 
+			if (b_inCams) {
+				DrawTexturePro(
+					staticRender,
+					{ windowHalfWidth * (float)(frame % 4 < 2), windowHalfHeight * (float)(frame & 1), windowHalfWidth, windowHalfHeight },
+					screenRectangle,
+					{ 0,0 },
+					0.0f,
+					ColorAlpha(WHITE, 0.125f)
+				);
+			}
+
 		#if _DEBUG // I don't want the debug data being displayed in the release build. The "#if _DEBUG { ... } #endif" will leave this section of code out of any version where _DEBUG is 0.
 			// Print the debug data
 			// Split into multiple sections because the default Raylib font isn't monospace
-			DrawText(TextFormat("Freddy:\nFoxy:\nBonnie:\nChica:\n\nCurrent state: %s",(b_inCams ? "Camera" : "Office")), 0, 0, 8, WHITE);
+			DrawText(TextFormat("Freddy:\nFoxy:\nBonnie:\nChica:\n\nLooking at: %s\nBattery: %u\n\nLeft door: %s\nRight door: %s\nLeft light: %s\nRight light: %s",
+								(b_inCams ? "Camera" : "Office"),
+								(unsigned int)(battery),
+								(b_doorL ? "closed" : "open"),
+								(b_doorR ? "closed" : "open"),
+								(b_lampL ? "on" : "off"),
+								(b_lampR ? "on" : "off")
+			), 0, 0, 8, WHITE);
 			DrawText(TextFormat("%i\n%i\n%i\n%i",
 								freddy.position,
 								foxyyy.position,
 								bonnie.position,
-								chicaa.position), 48, 0, 8, WHITE);
+								chicaa.position
+			), 48, 0, 8, WHITE);
 			DrawText(TextFormat("%i\n%i\n%i\n%i",
 								frame % freddy.recharge,
 								frame % foxyyy.recharge,
 								frame % bonnie.recharge,
-								frame % chicaa.recharge), 69, 0, 8, WHITE);
+								frame % chicaa.recharge
+			), 69, 0, 8, WHITE);
 			DrawText(TextFormat(" / %i (opprotunities: %i)  |  stored crits: %i\n / %i (opprotunities: %i)  |  %s\n / %i (opprotunities: %i)\n / %i (opprotunities: %i)",
 								freddy.recharge, frame / freddy.recharge, freddysStoredCrits,
 								foxyyy.recharge, frame / foxyyy.recharge, (b_foxyIsStunned ? "stunned" : ""),
 								bonnie.recharge, frame / bonnie.recharge,
-								chicaa.recharge, frame / chicaa.recharge), 86, 0, 8, WHITE);
+								chicaa.recharge, frame / chicaa.recharge
+			), 86, 0, 8, WHITE);
 		#endif
 			// TODO: render the animatronics
 
@@ -360,6 +402,7 @@ int main1() {
 	for (const Texture2D& render : foxyyyRenders) { UnloadTexture(render); } // Unload each texture in the foxyyyRenders array
 	for (const Texture2D& render : bonnieRenders) { UnloadTexture(render); } // Unload each texture in the bonnieRenders array
 	for (const Texture2D& render : chicaaRenders) { UnloadTexture(render); } // Unload each texture in the chicaaRenders array
+	UnloadTexture(staticRender);
 
 	CloseWindow();
 	return 0;

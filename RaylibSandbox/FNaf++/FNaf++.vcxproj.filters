@@ -35,5 +35,8 @@
     <Image Include="Chica_Debug.PNG">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Static.PNG">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

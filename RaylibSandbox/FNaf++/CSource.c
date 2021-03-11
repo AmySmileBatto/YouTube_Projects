@@ -82,7 +82,7 @@ void Jumpscare(Character animation) {
 	}
 }
 
-int main() {
+int main1() {
 	int windowWidth = 1920;
 	int windowHeight = 1080;
 	InitWindow(windowWidth, windowHeight, "FNaF++");

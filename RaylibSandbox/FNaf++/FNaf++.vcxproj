@@ -161,6 +161,7 @@
     <Image Include="Chica_Debug.PNG" />
     <Image Include="Foxy_Debug.PNG" />
     <Image Include="Freddy_Debug.PNG" />
+    <Image Include="Static.PNG" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
