@@ -30,3 +30,30 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio
+*.ilk
+*.pdb
+*.ipdb
+*.iobj
+*.zip
+*.vcxproj.filters
+*.vcxproj.user
+*.vcxproj
+*.log
+*.idb
+*.recipe
+*.tlog
+*.lastbuildstate
+*.sqlite
+*.suo
+*.VC.db
+
+# Art Asset Files
+*.png
+*.PNG
+*.obj
+*.jpeg
+*.ai
+*.fbx
+*.psd
