@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CSource.c" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>

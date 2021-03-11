@@ -1,2 +1,7 @@
-﻿  Source.cpp
+﻿  CSource.c
+D:\Repo\YouTube_Projects\RaylibSandbox\FNaf++\CSource.c(26,26): warning C4013: 'malloc' undefined; assuming extern returning int
+D:\Repo\YouTube_Projects\RaylibSandbox\FNaf++\CSource.c(26,52): warning C4047: '=': 'Texture2D *' differs in levels of indirection from 'int'
+D:\Repo\YouTube_Projects\RaylibSandbox\FNaf++\CSource.c(40,6): warning C4013: 'free' undefined; assuming extern returning int
+D:\Repo\YouTube_Projects\RaylibSandbox\FNaf++\CSource.c(208,23): warning C4013: 'rand' undefined; assuming extern returning int
+  Source.cpp
   FNaf++.vcxproj -> D:\Repo\YouTube_Projects\RaylibSandbox\x64\Debug\FNaf++.exe

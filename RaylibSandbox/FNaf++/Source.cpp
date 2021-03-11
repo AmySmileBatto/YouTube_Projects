@@ -91,12 +91,12 @@ struct Sprite {
 	*	` Sprite foo({ "frame0.png", "frame1.png", "frame2.png" }); `
 	* 
 	*	(in this example, foo loads and stores three textures with the respective filenames)
-	*
+	* 
 	***************************************************************************************************************************************/
 
 	// Allocates space for storing the array of textures, then loads the textures using the supplied filenames.
 	template<unsigned int _length> // @ For each unique array size passed as a parameter for the Sprite constructor, a copy of the constructor is made to match the passed array size.
-	Sprite(const const char* (&&_fileNameArray)[_length]) : length(_length), renders(nullptr) {
+	Sprite(const char* (&&_fileNameArray)[_length]) : length(_length), renders(nullptr) {
 		renders = new Texture2D[length]; // Allocate the memory for storing the array of textures
 		for (size_t i = 0; i < length; ++i) { renders[i] = LoadTexture(_fileNameArray[i]); } // For each element of the passed array, initialize the memory with the loaded texture
 	}
@@ -160,7 +160,7 @@ void Jumpscare(Character animation) {
 	}
 }
 
-int main() {
+int main1() {
 	int windowWidth = 1920; // FHD screen resolution for width
 	int windowHeight = 1080; // FHD screen resolution for height
 	InitWindow(windowWidth, windowHeight, "FNaF++"); // Create the window the game will run in
@@ -201,6 +201,8 @@ int main() {
 		LoadTexture("Freddy_Door_West.png"  ),	// West door (power out)
 	#endif
 	};
+	Sprite freddyJumpscare({ "" }); // TODO
+
 	// Array of renders for displaying Foxy
 	Texture2D foxyyyRenders[3]{
 	#if _DEBUG
@@ -217,8 +219,8 @@ int main() {
 		// West door (animated) TODO
 	#endif
 	};
+	Sprite foxyyyJumpscare({ "" }); // TODO
 	Sprite foxyyyHallRun({ "","" });
-	Sprite foxyyyJumpscare({ "" });
 
 	// Array of renders for displaying Bonnie
 	Texture2D bonnieRenders[7]{
@@ -240,6 +242,8 @@ int main() {
 		LoadTexture("Bonnie_Door_West"    ),	// West door
 	#endif
 	};
+	Sprite bonnieJumpscare({ "" }); // TODO
+
 	// Array of renders for displaying Chica
 	Texture2D chicaaRenders[7]{
 	#if _DEBUG
@@ -260,6 +264,9 @@ int main() {
 		LoadTexture("Chica_Door_East"  ),	// East door
 	#endif
 	};
+	Sprite chicaaJumpscare({ "" }); // TODO
+	Sprite chicaaHeadTwitch({ "" });
+
 #pragma endregion
 
 	int frame = 0; // What frame we are on @ The frame number can be a clean integer, time would be a float and may not line up with the times we are performing calculations.
@@ -272,8 +279,6 @@ int main() {
 		chicaa(390); // Chica
 	int freddysStoredCrits = 0; // Freddy stores movement opprotunities for later use
 	bool b_doorL, b_doorR = b_doorL = false; // Simultaneously declare both b_doorL and b_doorR, initializing them both to false in the same line. (b_doorL = false; b_doorR = b_doorL (which is now false);)
-
-	Sprite foxyRun(2, { "","" });
 
 	while (!WindowShouldClose()) { // This is the game loop; what happens every frame the program is running
 		#pragma region Update game variables
