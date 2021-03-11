@@ -152,16 +152,22 @@ int main() {
 	bool b_inCams = false;
 	bool b_foxyIsStunned = false; // Foxy must wait for both b_inCams & b_foxyIsStunned to both be false before he can move.
 	Animatronic
-		freddy(300),
+		freddy(640), // TODO: Find better numbers
 		foxyyy(400),
 		bonnie(200),
 		chicaa(250);
 	int freddysStoredCrits = 0; // Freddy stores movement opprotunities for later use
+	bool b_doorL, b_doorR = b_doorL = false; // TODO: Implement these
 
 	while (!WindowShouldClose()) {
 		// Update game variables
+		if (IsKeyPressed(KEY_SPACE)) {
+			b_inCams = !b_inCams;
+			if (b_inCams) b_foxyIsStunned = true;
+		}
 		frame++;
 		int frameRand = rand(); // Note that this value will be the same across all uses this frame. To help this, post-increment it each time it is used.
+		// TODO: What happens when an animatronic's position is greater than the last valid index in the animatronic's renders array?
 		if (freddy.IsReady(frame)) {
 			++freddysStoredCrits;
 			if (!b_inCams) {
@@ -186,7 +192,28 @@ int main() {
 
 			// Rendering
 			ClearBackground(BLACK);
-			// TODO
+
+#if _DEBUG
+			// Print the debug data
+			// Split into multiple sections because the default Raylib font isn't monospace
+			DrawText(TextFormat("Freddy:\nFoxy:\nBonnie:\nChica:\n\nCurrent state: %s",(b_inCams ? "Camera" : "Office")), 0, 0, 8, WHITE);
+			DrawText(TextFormat("%i\n%i\n%i\n%i",
+								freddy.position,
+								foxyyy.position,
+								bonnie.position,
+								chicaa.position), 48, 0, 8, WHITE);
+			DrawText(TextFormat("%i\n%i\n%i\n%i",
+								frame % freddy.recharge,
+								frame % foxyyy.recharge,
+								frame % bonnie.recharge,
+								frame % chicaa.recharge), 69, 0, 8, WHITE);
+			DrawText(TextFormat(" / %i (opprotunities: %i)  |  stored crits: %i\n / %i (opprotunities: %i)  |  %s\n / %i (opprotunities: %i)\n / %i (opprotunities: %i)",
+								freddy.recharge, frame / freddy.recharge, freddysStoredCrits,
+								foxyyy.recharge, frame / foxyyy.recharge, (b_foxyIsStunned ? "stunned" : ""),
+								bonnie.recharge, frame / bonnie.recharge,
+								chicaa.recharge, frame / chicaa.recharge), 86, 0, 8, WHITE);
+#endif
+			// TODO: render the animatronics
 
 		} EndDrawing();
 	}
@@ -196,3 +223,5 @@ int main() {
 	CloseWindow();
 	return 0;
 }
+
+// My dad is telling me to go upstairs now, I apologize if I ruin this code with sleepy-brain when I get back.

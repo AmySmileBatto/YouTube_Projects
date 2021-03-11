@@ -1,1 +1,12 @@
-﻿
+﻿Source.obj : error LNK2019: unresolved external symbol _InitWindow referenced in function _main
+Source.obj : error LNK2019: unresolved external symbol _WindowShouldClose referenced in function _main
+Source.obj : error LNK2019: unresolved external symbol _CloseWindow referenced in function _main
+Source.obj : error LNK2019: unresolved external symbol _ClearBackground referenced in function _main
+Source.obj : error LNK2019: unresolved external symbol _BeginDrawing referenced in function _main
+Source.obj : error LNK2019: unresolved external symbol _EndDrawing referenced in function _main
+Source.obj : error LNK2019: unresolved external symbol _SetTargetFPS referenced in function _main
+Source.obj : error LNK2019: unresolved external symbol _LoadTexture referenced in function "void __cdecl Renders::`dynamic initializer for 'g_BonnieRenders''(void)" (??__Eg_BonnieRenders@Renders@@YAXXZ)
+Source.obj : error LNK2019: unresolved external symbol _DrawText referenced in function _main
+Source.obj : error LNK2019: unresolved external symbol _TextFormat referenced in function _main
+D:\Repo\YouTube_Projects\RaylibSandbox\Library\raylib\bin\x64\Debug.DLL\raylib.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'x86'
+D:\Repo\YouTube_Projects\RaylibSandbox\Debug\FNaf++.exe : fatal error LNK1120: 10 unresolved externals
