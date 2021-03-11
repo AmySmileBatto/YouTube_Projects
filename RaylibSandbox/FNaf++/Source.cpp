@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <random>
+#include <vector>
 /*************************************************************************
 * 
 *	This project uses Raylib (https://www.raylib.com/)
@@ -64,19 +65,46 @@ enum class Cam {
 	Cam_7,		// Bathrooms
 };
 
-// 
+// Stores an array of textures for displaying in an animation
 struct Sprite {
-	Sprite(unsigned int _length, const char** _fileNameArray) : length(_length), renders(nullptr) {
-		renders = new Texture2D[_length];
-		for (; _length; --_length) { // Reduce _length (which is a copy) till it is 0. Then exit.
-			renders[_length - 1] = LoadTexture(_fileNameArray[_length - 1]);
-		}
-	};
+	
+	/***************************************************************************************************************************************
+	* 
+	*	TIP: the syntax `Type (&foo)[number]` allows you to pass a reference to a stack array as parameter.
+	*	A "stack array" is what I call an array declared with the syntax `Type foo[number]`. It is an array of constant size.
+	*	The fact that the array is stored on the stack and not the heap makes it easier (in my opinion) to work with.
+	*	"malloc()/new[]" and "free()/delete[]" don't have to be called on stack arrays, and they can be initialized in a function's parameter list.
+	*	The only downside is the fact that the array's size has to be known at compile time and can't be based on a variable.
+	*	To combat this, I usually just template the constructor/function taking the stack array parameter. This makes it possible for
+	*	the compiler to determine for itself what versions of the constructor are needed for the program to work and implement them.
+	*/
+	/*
+	*	NOTE: `Type &foo` is the syntax for lvalue references (reference to an existing variable).
+	*	`Type &&foo` is the syntax for rvalue references (reference to a variable created at the time the function is called).
+	*	I used an rvalue reference here so that I can still reference an array, but the array doesn't have to *already exist* prior to
+	*	calling the constructor. As a result, the constructor can take an array that hasn't even been given a name and doesn't exist
+	*	outside the scope of the constructor.
+	*/
+	/*
+	*	The resulting syntax for calling the constructor for Sprite is:
+	* 
+	*	` Sprite foo({ "frame0.png", "frame1.png", "frame2.png" }); `
+	* 
+	*	(in this example, foo loads and stores three textures with the respective filenames)
+	*
+	***************************************************************************************************************************************/
+
+	// Allocates space for storing the array of textures, then loads the textures using the supplied filenames.
+	template<unsigned int _length> // @ For each unique array size passed as a parameter for the Sprite constructor, a copy of the constructor is made to match the passed array size.
+	Sprite(const const char* (&&_fileNameArray)[_length]) : length(_length), renders(nullptr) {
+		renders = new Texture2D[length]; // Allocate the memory for storing the array of textures
+		for (size_t i = 0; i < length; ++i) { renders[i] = LoadTexture(_fileNameArray[i]); } // For each element of the passed array, initialize the memory with the loaded texture
+	}
+	// Unloads and frees the array of textures
+	// @ The destructor doesn't need to be (and really shouldn't) templated, as length will have been given a value by this point.
 	~Sprite() {
-		for (unsigned int i = 0; i < length; ++i) {
-			UnloadTexture(renders[i]);
-		}
-		delete[] renders;
+		for (unsigned int i = 0; i < length; ++i) { UnloadTexture(renders[i]); } // Unload the textures before freeing the memory so we can still access the textures *to* unload them.
+		delete[] renders; // Free the memory so the OS can use it for more important stuff. This only frees the array, not its elements; which is why we unload the textures first.
 	}
 
 	const unsigned int length; // How many frames are in the render
@@ -84,8 +112,7 @@ struct Sprite {
 };
 
 // Type for storing information about an animatronic
-struct Animatronic
-{
+struct Animatronic {
 	// Construct the animatronic with its base charge time
 	// There is no default constructor. Animatronic recharge is required as a non-default due to it being a const.
 	Animatronic(int _recharge) : position(0), recharge(_recharge), level(0) {};
@@ -104,6 +131,7 @@ struct Animatronic
 		return !(f % recharge); // If the frame evenly modulos by the recharge time, the animatronic has the opprotunity to move.
 	}
 };
+
 // Differenciates characters for use in the Jumpscare function
 enum class Character {
 	FREDDY, // Pull animation from Freddy's pool
@@ -111,6 +139,7 @@ enum class Character {
 	BONNIE, // Pull animation from Bonnie's pool
 	CHICAA, // Pull animation from Chica's pool
 };
+
 void Jumpscare(Character animation) {
 	switch (animation) {
 	case Character::FREDDY:
@@ -142,10 +171,10 @@ int main() {
 #pragma region Renders	
 
 #if _DEBUG // Initialize the debug textures so we only have to load each once
-	Texture2D debug_Freddy = LoadTexture("Freddy_Debug");
-	Texture2D debug_Foxyyy = LoadTexture("Foxy_Debug"  );
-	Texture2D debug_Bonnie = LoadTexture("Bonnie_Debug");
-	Texture2D debug_Chicaa = LoadTexture("Chica_Debug" );
+	Texture2D debug_Freddy = LoadTexture("Freddy_Debug.png");
+	Texture2D debug_Foxyyy = LoadTexture("Foxy_Debug.png"  );
+	Texture2D debug_Bonnie = LoadTexture("Bonnie_Debug.png");
+	Texture2D debug_Chicaa = LoadTexture("Chica_Debug.png" );
 #endif
 
 	// Array of renders for displaying Freddy
@@ -161,15 +190,15 @@ int main() {
 
 		debug_Freddy,	// West door (power out)
 	#else // TODO
-		LoadTexture("Freddy_ShowStage"  ),	// Show stage
-		LoadTexture("Freddy_DiningHall" ),	// Dining hall
-		LoadTexture("Freddy_Bathrooms"  ),	// Bathrooms
-		LoadTexture("Freddy_Kitchen"    ),	// Kitchen
-		LoadTexture("Freddy_Hall_East"  ),	// East hall
-		LoadTexture("Freddy_Corner_East"),	// East corner
-		LoadTexture("Freddy_Door_East"  ),	// East door
+		LoadTexture("Freddy_ShowStage.png"  ),	// Show stage
+		LoadTexture("Freddy_DiningHall.png" ),	// Dining hall
+		LoadTexture("Freddy_Bathrooms.png"  ),	// Bathrooms
+		LoadTexture("Freddy_Kitchen.png"    ),	// Kitchen
+		LoadTexture("Freddy_Hall_East.png"  ),	// East hall
+		LoadTexture("Freddy_Corner_East.png"),	// East corner
+		LoadTexture("Freddy_Door_East.png"  ),	// East door
 
-		LoadTexture("Freddy_Door_West"  ),	// West door (power out)
+		LoadTexture("Freddy_Door_West.png"  ),	// West door (power out)
 	#endif
 	};
 	// Array of renders for displaying Foxy
@@ -181,13 +210,16 @@ int main() {
 		// West hall (animated) TODO
 		// West door (animated) TODO
 	#else // TODO
-		LoadTexture("Foxy_PirateCove_0"),	// Pirate Cove (0)
-		LoadTexture("Foxy_PirateCove_1"),	// Pirate Cove (1)
-		LoadTexture("Foxy_PirateCove_2"),	// Pirate Cove (2)
+		LoadTexture("Foxy_PirateCove_0.png"),	// Pirate Cove (0)
+		LoadTexture("Foxy_PirateCove_1.png"),	// Pirate Cove (1)
+		LoadTexture("Foxy_PirateCove_2.png"),	// Pirate Cove (2)
 		// West hall (animated) TODO
 		// West door (animated) TODO
 	#endif
 	};
+	Sprite foxyyyHallRun({ "","" });
+	Sprite foxyyyJumpscare({ "" });
+
 	// Array of renders for displaying Bonnie
 	Texture2D bonnieRenders[7]{
 	#if _DEBUG
@@ -240,6 +272,8 @@ int main() {
 		chicaa(390); // Chica
 	int freddysStoredCrits = 0; // Freddy stores movement opprotunities for later use
 	bool b_doorL, b_doorR = b_doorL = false; // Simultaneously declare both b_doorL and b_doorR, initializing them both to false in the same line. (b_doorL = false; b_doorR = b_doorL (which is now false);)
+
+	Sprite foxyRun(2, { "","" });
 
 	while (!WindowShouldClose()) { // This is the game loop; what happens every frame the program is running
 		#pragma region Update game variables
