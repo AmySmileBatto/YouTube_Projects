@@ -133,14 +133,39 @@ namespace Renders {
 
 struct Animatronic {
 	// Construct the animatronic with its base charge time
-	Animatronic(int _recharge) : position(0), recharge(_recharge) {};
+	Animatronic(int _recharge) : position(0), recharge(_recharge), level(0) {};
 	int position; // Where the animatronic is in the building (refers to the index in the animatronic's Renders array)
 	int recharge; // How many frames between movement opprotunities
+	int level;
 
 	bool IsReady(int f) {
 		return !(f % recharge); // If the frame evenly modulos by the recharge time
 	}
+	void Jumpscare() {
+		// TODO: Render animatronic flailing about
+	}
 };
+enum Character {
+	FREDDY,
+	FOXY,
+	BONNIE,
+	CHICA,
+};
+void Jumpscare(Character animation) {
+	switch (animation) // TODO
+	{
+	case FREDDY:
+		break;
+	case FOXY:
+		break;
+	case BONNIE:
+		break;
+	case CHICA:
+		break;
+	default:
+		break;
+	}
+}
 
 int main() {
 	int windowWidth = 1280;
@@ -152,10 +177,10 @@ int main() {
 	bool b_inCams = false;
 	bool b_foxyIsStunned = false; // Foxy must wait for both b_inCams & b_foxyIsStunned to both be false before he can move.
 	Animatronic
-		freddy(640), // TODO: Find better numbers
-		foxyyy(400),
-		bonnie(200),
-		chicaa(250);
+		freddy(673),
+		foxyyy(437),
+		bonnie(284),
+		chicaa(390);
 	int freddysStoredCrits = 0; // Freddy stores movement opprotunities for later use
 	bool b_doorL, b_doorR = b_doorL = false; // TODO: Implement these
 
@@ -182,9 +207,15 @@ int main() {
 		}
 		if (bonnie.IsReady(frame)) {
 			bonnie.position += (frameRand++ & 1);
+			if (bonnie.position >= 7) { // Invalid index
+				bonnie.Jumpscare();
+			}
 		}
 		if (chicaa.IsReady(frame)) {
 			chicaa.position += (frameRand++ & 1);
+			if (chicaa.position >= 7) { // Invalid index
+
+			}
 		}
 
 		// Draw the frame
@@ -218,10 +249,11 @@ int main() {
 		} EndDrawing();
 	}
 	// Unload & free memory
-	// TODO
+	for (const Texture2D& render : Renders::g_FreddyRenders) UnloadTexture(render);
+	for (const Texture2D& render : Renders::g_FoxyRenders)   UnloadTexture(render);
+	for (const Texture2D& render : Renders::g_BonnieRenders) UnloadTexture(render);
+	for (const Texture2D& render : Renders::g_ChicaRenders)  UnloadTexture(render);
 
 	CloseWindow();
 	return 0;
 }
-
-// My dad is telling me to go upstairs now, I apologize if I ruin this code with sleepy-brain when I get back.
